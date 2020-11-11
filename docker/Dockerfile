@@ -13,8 +13,24 @@ ENV SHA=${GIT_COMMIT_SHA}
 # END of extra commands to fulfil runner's requirements
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-LABEL maintainer=jon@jaggersoft.com
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --ingroup sandbox \
+    --home /home/jest \
+    jest
 
-RUN npm install --global jest
+COPY package.json /home/jest
+RUN chown jest /home/jest/package.json
+WORKDIR /home/jest
+
+USER jest
+# reinstall npm. See https://github.com/npm/npm/issues/14232
+RUN rm -rf /usr/local/lib/node_modules/npm
+RUN npm install
+
+USER root
+RUN ln -s /home/jest/node_modules /home/sandbox/node_modules
+
 
 COPY red_amber_green.rb /usr/local/bin
